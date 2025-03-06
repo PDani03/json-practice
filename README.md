@@ -1,1 +1,1 @@
-simple game made for practicing json and classes
+simple game I made for practicing json and classes
