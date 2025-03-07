@@ -44,7 +44,7 @@ def addItem(item):
 
 def deleteItem(index):
     if vanItem():
-        return items.pop(index)
+        return [items.pop(index),index]
 
 def strItem(item):
     return f"{item.types()[item.type]}, with a multiplier of {item.value}"
@@ -53,17 +53,20 @@ def printItems():
     if vanItem():
         for i in range(len(items)):
             print(f"{i+1}. {strItem(items[i])}")
+        
+def loadData():
+    try:
+        with open(JSONFILE) as file:
+            return json.load(file)
+    except json.JSONDecodeError:
+        return {}
 
 def main():
     if not os.path.exists(JSONFILE): #make sure the file exists
         with open(JSONFILE, "w") as file:
             json.dump([], file) 
     
-    try:
-        with open(JSONFILE) as file:
-            data = json.load(file)
-    except json.JSONDecodeError:
-        data = {}
+    data = loadData()
         
     for i in data:
         items.append(Item(i["type"],i["value"]))
@@ -78,11 +81,19 @@ def main():
 
         
         if input("do you want the item? (y/n) ").lower()=="y":
+            deletedIndex=len(items)
             while fullItem():
                 inp=input("your backpack is full. do you want to delete an item to make space? (y/n) ").lower()
 
                 if inp=="y":
-                    deleted = deleteItem(int(input("which one? (number of item) "))-1)
+                    while True:
+                        try:
+                            deleted,deletedIndex = deleteItem(int(input("which one? (number of item) "))-1)
+                            break
+                        except ValueError:
+                            print("invalid input, try again")
+                        except IndexError:
+                            print("invalid input, try again")
                     print(f"successfully removed {strItem(deleted)}.")
 
                 elif inp=="n":
@@ -96,7 +107,9 @@ def main():
 
             else:
                 input(f"you grabbed the {strItem(tmpItem)} and walked away.")
-                items.append(tmpItem)
+                items.insert(deletedIndex,tmpItem)
+        else:
+            print("you walk past the item.")
         
         itemsJSON=[item.to_dict() for item in items]
 
